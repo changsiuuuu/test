@@ -92,6 +92,11 @@ h2 {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--panel);
+  padding-top: 2px;
 }
 
 .weekday-header-cell {

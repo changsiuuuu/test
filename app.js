@@ -56,8 +56,9 @@ function formatDate(date) {
   }).format(date);
 }
 
-function formatMonthDay(date) {
-  return `${date.getMonth() + 1}.${date.getDate()}`;
+function formatMonthDayWeek(date) {
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  return `${date.getMonth() + 1}.${date.getDate()} ${weekdays[date.getDay()]}`;
 }
 
 function formatDateTime(isoString) {
@@ -216,7 +217,7 @@ function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, mobileSwipe = fa
 
     const dayHeader = document.createElement('div');
     dayHeader.className = 'day-header';
-    dayHeader.textContent = formatMonthDay(date);
+    dayHeader.textContent = formatMonthDayWeek(date);
     cell.append(dayHeader);
 
     const matches = byDate.get(isoDate) ?? [];
@@ -295,7 +296,6 @@ function renderList() {
     scheduleList.classList.remove('main-scroll', 'filtered-scroll');
     if (currentWeekIndex < 0) currentWeekIndex = 0;
     if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
-    scheduleList.append(renderWeekdayHeader());
     scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, currentWeekIndex + 1, true));
   } else {
     scheduleList.classList.add('main-scroll');
