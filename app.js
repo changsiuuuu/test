@@ -14,6 +14,7 @@ let allSchedules = MANUAL_SCHEDULE;
 let selectedTeams = [];
 let currentWeekIndex = 0;
 let touchStartX = null;
+let lastSwipeDirection = 0;
 
 function getStartOfWeekMonday(date = new Date()) {
   const local = new Date(date);
@@ -169,9 +170,14 @@ function renderTeamButtons() {
   }
 }
 
-function renderWeekRow(week, saturdayFirstMatchIds) {
+function renderWeekRow(week, saturdayFirstMatchIds, mobileSwipe = false) {
   const wrap = document.createElement('li');
   wrap.className = 'week-row';
+
+  if (mobileSwipe) {
+    if (lastSwipeDirection < 0) wrap.classList.add('swipe-from-left');
+    if (lastSwipeDirection > 0) wrap.classList.add('swipe-from-right');
+  }
 
   const title = document.createElement('div');
   title.className = 'week-title';
@@ -259,20 +265,32 @@ function renderList() {
     return;
   }
 
-  scheduleList.classList.remove('filtered-scroll');
   const weeks = groupEventsByWeek(filteredEvents);
 
   if (!weeks.length) {
+    scheduleList.classList.remove('filtered-scroll', 'main-scroll');
     scheduleList.innerHTML = '<li class="empty">표시할 남은 경기가 없습니다.</li>';
     loadMoreBtn.hidden = true;
     return;
   }
 
-  if (currentWeekIndex < 0) currentWeekIndex = 0;
-  if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
+  const isMobile = window.matchMedia('(max-width: 900px)').matches;
 
-  scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds));
+  if (isMobile) {
+    scheduleList.classList.remove('main-scroll', 'filtered-scroll');
+    if (currentWeekIndex < 0) currentWeekIndex = 0;
+    if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
+    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, true));
+  } else {
+    scheduleList.classList.add('main-scroll');
+    scheduleList.classList.remove('filtered-scroll');
+    for (const week of weeks) {
+      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds));
+    }
+  }
+
   loadMoreBtn.hidden = true;
+  lastSwipeDirection = 0;
 }
 
 function setStatus() {
@@ -289,6 +307,8 @@ function init() {
 
 function navigateWeek(delta) {
   if (selectedTeams.length > 0) return;
+  if (!window.matchMedia('(max-width: 900px)').matches) return;
+  lastSwipeDirection = delta;
   currentWeekIndex += delta;
   renderList();
 }
@@ -316,4 +336,5 @@ resetFilterBtn.addEventListener('click', () => {
 });
 
 loadMoreBtn.hidden = true;
+window.addEventListener('resize', renderList);
 init();

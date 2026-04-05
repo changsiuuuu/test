@@ -135,6 +135,43 @@ h2 {
 
 
 
+
+.schedule-list.main-scroll {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.week-row.swipe-from-left {
+  animation: week-slide-from-left 220ms ease;
+}
+
+.week-row.swipe-from-right {
+  animation: week-slide-from-right 220ms ease;
+}
+
+@keyframes week-slide-from-left {
+  from {
+    transform: translateX(-28px);
+    opacity: 0.55;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes week-slide-from-right {
+  from {
+    transform: translateX(28px);
+    opacity: 0.55;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .schedule-list.filtered-scroll {
   max-height: 420px;
   overflow-y: auto;
