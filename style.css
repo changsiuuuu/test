@@ -87,6 +87,21 @@ h2 {
   touch-action: pan-y;
 }
 
+
+.weekday-header-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weekday-header-cell {
+  text-align: center;
+  font-weight: 800;
+  color: #cdd4e6;
+  border-bottom: 1px solid #334056;
+  padding-bottom: 6px;
+}
+
 .week-row {
   border: 1px solid #2a3040;
   background: #1a1f2b;
@@ -235,8 +250,3 @@ button {
   color: var(--danger);
 }
 
-@media (max-width: 900px) {
-  .week-grid {
-    grid-template-columns: 1fr;
-  }
-}

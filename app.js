@@ -56,8 +56,8 @@ function formatDate(date) {
   }).format(date);
 }
 
-function formatDateNumber(date) {
-  return new Intl.DateTimeFormat('ko-KR', { day: 'numeric' }).format(date);
+function formatMonthDay(date) {
+  return `${date.getMonth() + 1}.${date.getDate()}`;
 }
 
 function formatDateTime(isoString) {
@@ -170,7 +170,23 @@ function renderTeamButtons() {
   }
 }
 
-function renderWeekRow(week, saturdayFirstMatchIds, mobileSwipe = false) {
+
+function renderWeekdayHeader() {
+  const wrap = document.createElement('li');
+  wrap.className = 'weekday-header-row';
+
+  const days = ['수', '목', '금', '토', '일'];
+  for (const day of days) {
+    const cell = document.createElement('div');
+    cell.className = 'weekday-header-cell';
+    cell.textContent = day;
+    wrap.append(cell);
+  }
+
+  return wrap;
+}
+
+function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, mobileSwipe = false) {
   const wrap = document.createElement('li');
   wrap.className = 'week-row';
 
@@ -183,7 +199,7 @@ function renderWeekRow(week, saturdayFirstMatchIds, mobileSwipe = false) {
   title.className = 'week-title';
   const weekEnd = new Date(week.weekStart);
   weekEnd.setDate(weekEnd.getDate() + 6);
-  title.textContent = `${formatDate(week.weekStart)} ~ ${formatDate(weekEnd)}`;
+  title.textContent = `${weekNumber}주차`;
 
   const grid = document.createElement('div');
   grid.className = 'week-grid';
@@ -200,8 +216,7 @@ function renderWeekRow(week, saturdayFirstMatchIds, mobileSwipe = false) {
 
     const dayHeader = document.createElement('div');
     dayHeader.className = 'day-header';
-    const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date).toUpperCase();
-    dayHeader.textContent = `${dayName} ${formatDateNumber(date)}`;
+    dayHeader.textContent = formatMonthDay(date);
     cell.append(dayHeader);
 
     const matches = byDate.get(isoDate) ?? [];
@@ -280,13 +295,15 @@ function renderList() {
     scheduleList.classList.remove('main-scroll', 'filtered-scroll');
     if (currentWeekIndex < 0) currentWeekIndex = 0;
     if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
-    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, true));
+    scheduleList.append(renderWeekdayHeader());
+    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, currentWeekIndex + 1, true));
   } else {
     scheduleList.classList.add('main-scroll');
     scheduleList.classList.remove('filtered-scroll');
-    for (const week of weeks) {
-      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds));
-    }
+    scheduleList.append(renderWeekdayHeader());
+    weeks.forEach((week, index) => {
+      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, index + 1));
+    });
   }
 
   loadMoreBtn.hidden = true;
@@ -294,9 +311,7 @@ function renderList() {
 }
 
 function setStatus() {
-  const start = getStartOfWeekMonday();
-  const end = getEndOfWeekSunday();
-  statusText.textContent = `수동 데이터 기준 · 이번 주(${formatDate(start)} ~ ${formatDate(end)}) 시작, 좌우 스와이프로 이전/다음 주 이동`;
+  statusText.textContent = "";
 }
 
 function init() {
