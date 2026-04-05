@@ -84,6 +84,7 @@ h2 {
   list-style: none;
   display: grid;
   gap: 12px;
+  touch-action: pan-y;
 }
 
 .week-row {

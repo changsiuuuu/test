@@ -12,7 +12,8 @@ const resetFilterBtn = document.getElementById('resetFilterBtn');
 
 let allSchedules = MANUAL_SCHEDULE;
 let selectedTeams = [];
-let visibleWeekCount = WEEKS_PER_PAGE;
+let currentWeekIndex = 0;
+let touchStartX = null;
 
 function getStartOfWeekMonday(date = new Date()) {
   const local = new Date(date);
@@ -160,7 +161,7 @@ function renderTeamButtons() {
         selectedTeams = [selectedTeams[1], team];
       }
 
-      visibleWeekCount = WEEKS_PER_PAGE;
+      currentWeekIndex = 0;
       renderTeamButtons();
       renderList();
     });
@@ -260,25 +261,24 @@ function renderList() {
 
   scheduleList.classList.remove('filtered-scroll');
   const weeks = groupEventsByWeek(filteredEvents);
-  const visibleWeeks = weeks.slice(0, visibleWeekCount);
 
-  if (!visibleWeeks.length) {
+  if (!weeks.length) {
     scheduleList.innerHTML = '<li class="empty">표시할 남은 경기가 없습니다.</li>';
     loadMoreBtn.hidden = true;
     return;
   }
 
-  for (const week of visibleWeeks) {
-    scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds));
-  }
+  if (currentWeekIndex < 0) currentWeekIndex = 0;
+  if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
 
-  loadMoreBtn.hidden = visibleWeekCount >= weeks.length;
+  scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds));
+  loadMoreBtn.hidden = true;
 }
 
 function setStatus() {
   const start = getStartOfWeekMonday();
   const end = getEndOfWeekSunday();
-  statusText.textContent = `수동 데이터 기준 · 이번 주(${formatDate(start)} ~ ${formatDate(end)})를 먼저 보여줍니다`;
+  statusText.textContent = `수동 데이터 기준 · 이번 주(${formatDate(start)} ~ ${formatDate(end)}) 시작, 좌우 스와이프로 이전/다음 주 이동`;
 }
 
 function init() {
@@ -287,16 +287,33 @@ function init() {
   renderList();
 }
 
-loadMoreBtn.addEventListener('click', () => {
-  visibleWeekCount += WEEKS_PER_PAGE;
+function navigateWeek(delta) {
+  if (selectedTeams.length > 0) return;
+  currentWeekIndex += delta;
   renderList();
-});
+}
+
+scheduleList.addEventListener('touchstart', (event) => {
+  touchStartX = event.touches[0]?.clientX ?? null;
+}, { passive: true });
+
+scheduleList.addEventListener('touchend', (event) => {
+  if (touchStartX === null || selectedTeams.length > 0) return;
+  const endX = event.changedTouches[0]?.clientX ?? touchStartX;
+  const diffX = endX - touchStartX;
+  touchStartX = null;
+
+  if (Math.abs(diffX) < 35) return;
+  if (diffX < 0) navigateWeek(1); // 좌로 스와이프 -> 다음 주
+  else navigateWeek(-1); // 우로 스와이프 -> 이전 주
+}, { passive: true });
 
 resetFilterBtn.addEventListener('click', () => {
   selectedTeams = [];
-  visibleWeekCount = WEEKS_PER_PAGE;
+  currentWeekIndex = 0;
   renderTeamButtons();
   renderList();
 });
 
+loadMoreBtn.hidden = true;
 init();
