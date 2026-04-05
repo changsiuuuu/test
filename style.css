@@ -142,9 +142,14 @@ h2 {
   line-height: 1.35;
 }
 
-.featured-match {
-  border-color: #e9b949 !important;
-  background: #3a2e13 !important;
+.featured-sat {
+  color: #ffd166;
+  font-weight: 800;
+}
+
+.featured-sat-text {
+  border-color: #e9b949;
+  background: #3a2e13;
   color: #ffe4a2;
 }
 

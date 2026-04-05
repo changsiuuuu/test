@@ -201,7 +201,7 @@ function renderWeekRow(week, saturdayFirstMatchIds) {
     } else {
       for (const match of matches) {
         const item = document.createElement('div');
-        item.className = `day-match ${saturdayFirstMatchIds.has(match.id) ? 'featured-match' : ''}`;
+        item.className = `day-match ${saturdayFirstMatchIds.has(match.id) ? 'featured-sat' : ''}`;
         item.textContent = `${match.teamA} vs ${match.teamB}`;
         cell.append(item);
       }
@@ -224,16 +224,16 @@ function renderFilteredTextList(events, saturdayFirstMatchIds) {
 
   for (const event of sorted) {
     const li = document.createElement('li');
-    li.className = `text-schedule-item ${saturdayFirstMatchIds.has(event.id) ? 'featured-match' : ''}`;
+    li.className = `text-schedule-item ${saturdayFirstMatchIds.has(event.id) ? 'featured-sat-text' : ''}`;
     li.textContent = `${formatDateTime(event.startTime)} · ${event.teamA} vs ${event.teamB}`;
     scheduleList.append(li);
   }
 }
 
 function renderList() {
-  const filteredEvents = applyTeamFilter(allSchedules);
-  const events = getEventsFromCurrentWeek(filteredEvents);
-  const saturdayFirstMatchIds = getSaturdayFirstMatchIds(events);
+  const currentWeekEvents = getEventsFromCurrentWeek(allSchedules);
+  const filteredEvents = applyTeamFilter(currentWeekEvents);
+  const saturdayFirstMatchIds = getSaturdayFirstMatchIds(currentWeekEvents);
 
   scheduleList.innerHTML = '';
 
@@ -247,11 +247,11 @@ function renderList() {
 
   if (selectedTeams.length > 0) {
     loadMoreBtn.hidden = true;
-    renderFilteredTextList(events, saturdayFirstMatchIds);
+    renderFilteredTextList(filteredEvents, saturdayFirstMatchIds);
     return;
   }
 
-  const weeks = groupEventsByWeek(events);
+  const weeks = groupEventsByWeek(filteredEvents);
   const visibleWeeks = weeks.slice(0, visibleWeekCount);
 
   if (!visibleWeeks.length) {
