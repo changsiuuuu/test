@@ -81,6 +81,11 @@ function getEventsFromCurrentWeek(events) {
   return events.filter((event) => getStartOfWeekMonday(new Date(event.startTime)) >= currentWeekStart);
 }
 
+function getUpcomingEvents(events) {
+  const now = new Date();
+  return events.filter((event) => new Date(event.startTime) >= now);
+}
+
 function getSaturdayFirstMatchIds(events) {
   const saturdays = new Map();
 
@@ -246,11 +251,14 @@ function renderList() {
   }
 
   if (selectedTeams.length > 0) {
+    const upcomingFilteredEvents = getUpcomingEvents(filteredEvents);
     loadMoreBtn.hidden = true;
-    renderFilteredTextList(filteredEvents, saturdayFirstMatchIds);
+    scheduleList.classList.add('filtered-scroll');
+    renderFilteredTextList(upcomingFilteredEvents, saturdayFirstMatchIds);
     return;
   }
 
+  scheduleList.classList.remove('filtered-scroll');
   const weeks = groupEventsByWeek(filteredEvents);
   const visibleWeeks = weeks.slice(0, visibleWeekCount);
 

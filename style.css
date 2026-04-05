@@ -133,6 +133,13 @@ h2 {
 }
 
 
+
+.schedule-list.filtered-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
 .text-schedule-item {
   border: 1px solid #2a3040;
   background: var(--panel-soft);
