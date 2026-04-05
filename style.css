@@ -83,25 +83,53 @@ h2 {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
-.schedule-item {
-  display: grid;
-  gap: 4px;
+.week-row {
   border: 1px solid #2a3040;
-  background: var(--panel-soft);
+  background: #1a1f2b;
   border-radius: 10px;
   padding: 10px;
 }
 
-.meta {
-  color: var(--muted);
+.week-title {
   font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 8px;
 }
 
-.matchup {
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.day-cell {
+  border: 1px solid #2d3446;
+  background: var(--panel-soft);
+  border-radius: 8px;
+  padding: 8px;
+  min-height: 96px;
+}
+
+.day-header {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #d6dbeb;
+  margin-bottom: 8px;
+}
+
+.day-match {
+  font-size: 0.82rem;
   font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.day-empty {
+  color: #6e7890;
+  font-size: 0.82rem;
 }
 
 .actions {
@@ -139,4 +167,10 @@ button {
 
 .error {
   color: var(--danger);
+}
+
+@media (max-width: 900px) {
+  .week-grid {
+    grid-template-columns: 1fr;
+  }
 }
