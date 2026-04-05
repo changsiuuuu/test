@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LCK 경기 일정</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>LCK 경기 일정</h1>
+        <p id="statusText" class="status">이번 주(월~일) 남은 경기를 보여줍니다.</p>
+      </header>
+
+      <section aria-label="팀 필터" class="team-filter-section">
+        <h2>팀별 보기</h2>
+        <div id="teamButtons" class="team-grid"></div>
+      </section>
+
+      <section aria-label="일정 목록" class="schedule-section">
+        <div class="section-title-row">
+          <h2 id="listTitle">전체 일정</h2>
+          <button id="resetFilterBtn" class="ghost-button" type="button">필터 초기화</button>
+        </div>
+
+        <ul id="scheduleList" class="schedule-list"></ul>
+
+        <div class="actions">
+          <button id="loadMoreBtn" class="primary-button" type="button">더보기</button>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
