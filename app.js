@@ -56,9 +56,11 @@ function formatDate(date) {
   }).format(date);
 }
 
-function formatMonthDayWeek(date) {
+function formatMonthDay(date, isMobile) {
+  const base = `${date.getMonth() + 1}.${date.getDate()}`;
+  if (!isMobile) return base;
   const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-  return `${date.getMonth() + 1}.${date.getDate()} ${weekdays[date.getDay()]}`;
+  return `${base} ${weekdays[date.getDay()]}`;
 }
 
 function formatDateTime(isoString) {
@@ -187,7 +189,7 @@ function renderWeekdayHeader() {
   return wrap;
 }
 
-function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, mobileSwipe = false) {
+function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, isMobile, mobileSwipe = false) {
   const wrap = document.createElement('li');
   wrap.className = 'week-row';
 
@@ -217,7 +219,7 @@ function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, mobileSwipe = fa
 
     const dayHeader = document.createElement('div');
     dayHeader.className = 'day-header';
-    dayHeader.textContent = formatMonthDayWeek(date);
+    dayHeader.textContent = formatMonthDay(date, isMobile);
     cell.append(dayHeader);
 
     const matches = byDate.get(isoDate) ?? [];
@@ -296,13 +298,13 @@ function renderList() {
     scheduleList.classList.remove('main-scroll', 'filtered-scroll');
     if (currentWeekIndex < 0) currentWeekIndex = 0;
     if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
-    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, currentWeekIndex + 1, true));
+    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, currentWeekIndex + 1, true, true));
   } else {
     scheduleList.classList.add('main-scroll');
     scheduleList.classList.remove('filtered-scroll');
     scheduleList.append(renderWeekdayHeader());
     weeks.forEach((week, index) => {
-      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, index + 1));
+      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, index + 1, false));
     });
   }
 
