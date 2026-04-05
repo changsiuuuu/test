@@ -255,3 +255,9 @@ button {
   color: var(--danger);
 }
 
+
+@media (max-width: 900px) {
+  .week-grid {
+    grid-template-columns: 1fr;
+  }
+}
