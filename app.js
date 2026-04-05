@@ -11,7 +11,7 @@ const listTitle = document.getElementById('listTitle');
 const resetFilterBtn = document.getElementById('resetFilterBtn');
 
 let allSchedules = MANUAL_SCHEDULE;
-let selectedTeam = null;
+let selectedTeams = [];
 let visibleWeekCount = WEEKS_PER_PAGE;
 
 function getStartOfWeekMonday(date = new Date()) {
@@ -36,8 +36,18 @@ function getFutureEvents(events) {
 }
 
 function applyTeamFilter(events) {
-  if (!selectedTeam) return events;
-  return events.filter((event) => event.teamA === selectedTeam || event.teamB === selectedTeam);
+  if (selectedTeams.length === 0) return events;
+
+  if (selectedTeams.length === 1) {
+    const [team] = selectedTeams;
+    return events.filter((event) => event.teamA === team || event.teamB === team);
+  }
+
+  const [team1, team2] = selectedTeams;
+  return events.filter((event) =>
+    (event.teamA === team1 && event.teamB === team2) ||
+    (event.teamA === team2 && event.teamB === team1)
+  );
 }
 
 function formatDate(date) {
@@ -52,13 +62,21 @@ function formatDateNumber(date) {
   return new Intl.DateTimeFormat('ko-KR', { day: 'numeric' }).format(date);
 }
 
+
+function toLocalDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function groupEventsByWeek(events) {
   const weekMap = new Map();
 
   for (const event of events) {
     const startTime = new Date(event.startTime);
     const weekStart = getStartOfWeekMonday(startTime);
-    const weekKey = weekStart.toISOString().slice(0, 10);
+    const weekKey = toLocalDateKey(weekStart);
 
     if (!weekMap.has(weekKey)) {
       weekMap.set(weekKey, { weekStart, events: [] });
@@ -92,10 +110,20 @@ function renderTeamButtons() {
   for (const team of LCK_TEAMS) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `team-button ${selectedTeam === team ? 'active' : ''}`;
+    btn.className = `team-button ${selectedTeams.includes(team) ? 'active' : ''}`;
     btn.textContent = team;
     btn.addEventListener('click', () => {
-      selectedTeam = selectedTeam === team ? null : team;
+      const isSelected = selectedTeams.includes(team);
+
+      if (isSelected) {
+        selectedTeams = selectedTeams.filter((item) => item !== team);
+      } else if (selectedTeams.length < 2) {
+        selectedTeams = [...selectedTeams, team];
+      } else {
+        // 2개가 이미 선택되어 있으면 가장 먼저 선택한 팀을 빼고 새 팀을 추가
+        selectedTeams = [selectedTeams[1], team];
+      }
+
       visibleWeekCount = WEEKS_PER_PAGE;
       renderTeamButtons();
       renderList();
@@ -122,7 +150,7 @@ function renderWeekRow(week) {
     const date = new Date(week.weekStart);
     const diff = day === 0 ? 6 : day - 1;
     date.setDate(date.getDate() + diff);
-    const isoDate = date.toISOString().slice(0, 10);
+    const isoDate = toLocalDateKey(date);
 
     const cell = document.createElement('div');
     cell.className = 'day-cell';
@@ -162,7 +190,13 @@ function renderList() {
   const weeks = groupEventsByWeek(events);
   const visibleWeeks = weeks.slice(0, visibleWeekCount);
 
-  listTitle.textContent = selectedTeam ? `${selectedTeam} 일정` : '전체 일정';
+  if (selectedTeams.length === 2) {
+    listTitle.textContent = `${selectedTeams[0]} vs ${selectedTeams[1]} 일정`;
+  } else if (selectedTeams.length === 1) {
+    listTitle.textContent = `${selectedTeams[0]} 일정`;
+  } else {
+    listTitle.textContent = '전체 일정';
+  }
   scheduleList.innerHTML = '';
 
   if (!visibleWeeks.length) {
@@ -196,7 +230,7 @@ loadMoreBtn.addEventListener('click', () => {
 });
 
 resetFilterBtn.addEventListener('click', () => {
-  selectedTeam = null;
+  selectedTeams = [];
   visibleWeekCount = WEEKS_PER_PAGE;
   renderTeamButtons();
   renderList();
