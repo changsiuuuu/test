@@ -30,11 +30,6 @@ function getEndOfWeekSunday(date = new Date()) {
   return end;
 }
 
-function getFutureEvents(events) {
-  const now = new Date();
-  return events.filter((event) => new Date(event.startTime) >= now);
-}
-
 function applyTeamFilter(events) {
   if (selectedTeams.length === 0) return events;
 
@@ -44,9 +39,10 @@ function applyTeamFilter(events) {
   }
 
   const [team1, team2] = selectedTeams;
-  return events.filter((event) =>
-    (event.teamA === team1 && event.teamB === team2) ||
-    (event.teamA === team2 && event.teamB === team1)
+  return events.filter(
+    (event) =>
+      (event.teamA === team1 && event.teamB === team2) ||
+      (event.teamA === team2 && event.teamB === team1)
   );
 }
 
@@ -62,12 +58,48 @@ function formatDateNumber(date) {
   return new Intl.DateTimeFormat('ko-KR', { day: 'numeric' }).format(date);
 }
 
+function formatDateTime(isoString) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(isoString));
+}
 
 function toLocalDateKey(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+function getEventsFromCurrentWeek(events) {
+  const currentWeekStart = getStartOfWeekMonday();
+  return events.filter((event) => getStartOfWeekMonday(new Date(event.startTime)) >= currentWeekStart);
+}
+
+function getSaturdayFirstMatchIds(events) {
+  const saturdays = new Map();
+
+  for (const event of events) {
+    const date = new Date(event.startTime);
+    if (date.getDay() !== 6) continue;
+
+    const key = toLocalDateKey(date);
+    if (!saturdays.has(key)) saturdays.set(key, []);
+    saturdays.get(key).push(event);
+  }
+
+  const ids = new Set();
+  for (const matches of saturdays.values()) {
+    matches.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+    if (matches[0]?.id) ids.add(matches[0].id);
+  }
+
+  return ids;
 }
 
 function groupEventsByWeek(events) {
@@ -120,7 +152,6 @@ function renderTeamButtons() {
       } else if (selectedTeams.length < 2) {
         selectedTeams = [...selectedTeams, team];
       } else {
-        // 2개가 이미 선택되어 있으면 가장 먼저 선택한 팀을 빼고 새 팀을 추가
         selectedTeams = [selectedTeams[1], team];
       }
 
@@ -132,7 +163,7 @@ function renderTeamButtons() {
   }
 }
 
-function renderWeekRow(week) {
+function renderWeekRow(week, saturdayFirstMatchIds) {
   const wrap = document.createElement('li');
   wrap.className = 'week-row';
 
@@ -170,7 +201,7 @@ function renderWeekRow(week) {
     } else {
       for (const match of matches) {
         const item = document.createElement('div');
-        item.className = 'day-match';
+        item.className = `day-match ${saturdayFirstMatchIds.has(match.id) ? 'featured-match' : ''}`;
         item.textContent = `${match.teamA} vs ${match.teamB}`;
         cell.append(item);
       }
@@ -183,12 +214,28 @@ function renderWeekRow(week) {
   return wrap;
 }
 
-function renderList() {
-  let events = getFutureEvents(allSchedules);
-  events = applyTeamFilter(events);
+function renderFilteredTextList(events, saturdayFirstMatchIds) {
+  const sorted = [...events].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
-  const weeks = groupEventsByWeek(events);
-  const visibleWeeks = weeks.slice(0, visibleWeekCount);
+  if (!sorted.length) {
+    scheduleList.innerHTML = '<li class="empty">표시할 경기가 없습니다.</li>';
+    return;
+  }
+
+  for (const event of sorted) {
+    const li = document.createElement('li');
+    li.className = `text-schedule-item ${saturdayFirstMatchIds.has(event.id) ? 'featured-match' : ''}`;
+    li.textContent = `${formatDateTime(event.startTime)} · ${event.teamA} vs ${event.teamB}`;
+    scheduleList.append(li);
+  }
+}
+
+function renderList() {
+  const filteredEvents = applyTeamFilter(allSchedules);
+  const events = getEventsFromCurrentWeek(filteredEvents);
+  const saturdayFirstMatchIds = getSaturdayFirstMatchIds(events);
+
+  scheduleList.innerHTML = '';
 
   if (selectedTeams.length === 2) {
     listTitle.textContent = `${selectedTeams[0]} vs ${selectedTeams[1]} 일정`;
@@ -197,7 +244,15 @@ function renderList() {
   } else {
     listTitle.textContent = '전체 일정';
   }
-  scheduleList.innerHTML = '';
+
+  if (selectedTeams.length > 0) {
+    loadMoreBtn.hidden = true;
+    renderFilteredTextList(events, saturdayFirstMatchIds);
+    return;
+  }
+
+  const weeks = groupEventsByWeek(events);
+  const visibleWeeks = weeks.slice(0, visibleWeekCount);
 
   if (!visibleWeeks.length) {
     scheduleList.innerHTML = '<li class="empty">표시할 남은 경기가 없습니다.</li>';
@@ -206,7 +261,7 @@ function renderList() {
   }
 
   for (const week of visibleWeeks) {
-    scheduleList.append(renderWeekRow(week));
+    scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds));
   }
 
   loadMoreBtn.hidden = visibleWeekCount >= weeks.length;
