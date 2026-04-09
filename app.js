@@ -9,6 +9,7 @@ const scheduleList = document.getElementById('scheduleList');
 const loadMoreBtn = document.getElementById('loadMoreBtn');
 const listTitle = document.getElementById('listTitle');
 const resetFilterBtn = document.getElementById('resetFilterBtn');
+const pageTitle = document.querySelector('.header h1');
 
 let allSchedules = MANUAL_SCHEDULE;
 let selectedTeams = [];
@@ -354,23 +355,13 @@ function renderList() {
     const week = weeks[currentWeekIndex];
     scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, currentWeekIndex + 1, true, true));
   } else {
-    currentWeekIndex = currentWeekAutoIndex;
     scheduleList.classList.add('main-scroll');
     scheduleList.append(renderWeekdayHeader());
 
     weeks.forEach((week, index) => {
       scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, index + 1, false, false));
     });
-
-    const moveToCurrentWeek = () => {
-      const currentWeekEl = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekIndex + 1}"]`);
-      if (!currentWeekEl) return;
-      const weekdayHeader = scheduleList.querySelector('.weekday-header-row');
-      const stickyOffset = weekdayHeader ? weekdayHeader.offsetHeight : 0;
-      scheduleList.scrollTop = Math.max(currentWeekEl.offsetTop - stickyOffset - 8, 0);
-    };
-
-    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(moveToCurrentWeek, 0)));
+    scheduleList.scrollTop = 0;
   }
 
   loadMoreBtn.hidden = true;
@@ -390,6 +381,13 @@ function init() {
 
 
 resetFilterBtn.addEventListener('click', () => {
+  selectedTeams = [];
+  currentWeekIndex = getCurrentWeekIndex(groupEventsByWeek(allSchedules));
+  renderTeamButtons();
+  renderList();
+});
+
+pageTitle?.addEventListener('click', () => {
   selectedTeams = [];
   currentWeekIndex = getCurrentWeekIndex(groupEventsByWeek(allSchedules));
   renderTeamButtons();
