@@ -203,6 +203,7 @@ function renderWeekdayHeader() {
 function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, isMobile, mobileSwipe = false) {
   const wrap = document.createElement('li');
   wrap.className = 'week-row';
+  wrap.dataset.weekIndex = String(weekNumber);
 
   if (mobileSwipe) {
     if (lastSwipeDirection < 0) wrap.classList.add('swipe-from-left');
@@ -290,12 +291,13 @@ function renderList() {
     const upcomingFilteredEvents = getUpcomingEvents(filteredEvents);
     loadMoreBtn.hidden = true;
     scheduleList.classList.add('filtered-scroll');
+    scheduleList.classList.remove('mobile-scroll', 'main-scroll');
     renderFilteredTextList(upcomingFilteredEvents, saturdayFirstMatchIds);
     return;
   }
 
   if (!weeks.length) {
-    scheduleList.classList.remove('filtered-scroll', 'main-scroll');
+    scheduleList.classList.remove('filtered-scroll', 'main-scroll', 'mobile-scroll');
     scheduleList.innerHTML = '<li class="empty">표시할 남은 경기가 없습니다.</li>';
     loadMoreBtn.hidden = true;
     return;
@@ -310,16 +312,22 @@ function renderList() {
 
   if (isMobile) {
     scheduleList.classList.remove('main-scroll', 'filtered-scroll');
+    scheduleList.classList.add('mobile-scroll');
     if (currentWeekIndex < 0) currentWeekIndex = 0;
     if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
     scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, currentWeekIndex + 1, true, true));
   } else {
     scheduleList.classList.add('main-scroll');
-    scheduleList.classList.remove('filtered-scroll');
+    scheduleList.classList.remove('filtered-scroll', 'mobile-scroll');
     scheduleList.append(renderWeekdayHeader());
     weeks.forEach((week, index) => {
       scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, index + 1, false));
     });
+
+    const currentWeekRow = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekAutoIndex + 1}"]`);
+    if (currentWeekRow) {
+      scheduleList.scrollTop = Math.max(currentWeekRow.offsetTop - 52, 0);
+    }
   }
 
   loadMoreBtn.hidden = true;
