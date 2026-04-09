@@ -134,6 +134,17 @@ function groupEventsByWeek(events) {
     }));
 }
 
+
+function getCurrentWeekIndex(weeks) {
+  const currentWeekKey = toLocalDateKey(getStartOfWeekMonday());
+  const found = weeks.findIndex((week) => toLocalDateKey(week.weekStart) === currentWeekKey);
+  if (found >= 0) return found;
+
+  const now = new Date();
+  const next = weeks.findIndex((week) => week.weekStart >= now);
+  return next >= 0 ? next : Math.max(weeks.length - 1, 0);
+}
+
 function eventsByDate(events) {
   const map = new Map();
   for (const event of events) {
@@ -152,7 +163,7 @@ function renderTeamButtons() {
   for (const team of LCK_TEAMS) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `team-button ${selectedTeams.includes(team) ? 'active' : ''}`;
+    btn.className = `btn team-button ${selectedTeams.includes(team) ? 'active' : ''}`;
     btn.textContent = team;
     btn.addEventListener('click', () => {
       const isSelected = selectedTeams.includes(team);
@@ -261,9 +272,9 @@ function renderFilteredTextList(events, saturdayFirstMatchIds) {
 }
 
 function renderList() {
-  const currentWeekEvents = getEventsFromCurrentWeek(allSchedules);
-  const filteredEvents = applyTeamFilter(currentWeekEvents);
-  const saturdayFirstMatchIds = getSaturdayFirstMatchIds(currentWeekEvents);
+  const weeks = groupEventsByWeek(allSchedules);
+  const filteredEvents = applyTeamFilter(allSchedules);
+  const saturdayFirstMatchIds = getSaturdayFirstMatchIds(allSchedules);
 
   scheduleList.innerHTML = '';
 
@@ -283,8 +294,6 @@ function renderList() {
     return;
   }
 
-  const weeks = groupEventsByWeek(filteredEvents);
-
   if (!weeks.length) {
     scheduleList.classList.remove('filtered-scroll', 'main-scroll');
     scheduleList.innerHTML = '<li class="empty">표시할 남은 경기가 없습니다.</li>';
@@ -293,6 +302,11 @@ function renderList() {
   }
 
   const isMobile = window.matchMedia('(max-width: 900px)').matches;
+  const currentWeekAutoIndex = getCurrentWeekIndex(weeks);
+
+  if (currentWeekIndex < 0 || currentWeekIndex > weeks.length - 1) {
+    currentWeekIndex = currentWeekAutoIndex;
+  }
 
   if (isMobile) {
     scheduleList.classList.remove('main-scroll', 'filtered-scroll');
@@ -317,6 +331,7 @@ function setStatus() {
 }
 
 function init() {
+  currentWeekIndex = getCurrentWeekIndex(groupEventsByWeek(allSchedules));
   renderTeamButtons();
   setStatus();
   renderList();
@@ -347,7 +362,7 @@ scheduleList.addEventListener('touchend', (event) => {
 
 resetFilterBtn.addEventListener('click', () => {
   selectedTeams = [];
-  currentWeekIndex = 0;
+  currentWeekIndex = getCurrentWeekIndex(groupEventsByWeek(allSchedules));
   renderTeamButtons();
   renderList();
 });
