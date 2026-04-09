@@ -150,6 +150,8 @@ function groupEventsByWeek(events) {
 
 
 function getCurrentWeekIndex(weeks) {
+  if (!weeks.length) return 0;
+
   const now = new Date();
   const currentWeekStart = getStartOfWeekMonday(now);
   const currentKey = toLocalDateKey(currentWeekStart);
@@ -161,7 +163,7 @@ function getCurrentWeekIndex(weeks) {
     if (weeks[i].weekStart > currentWeekStart) return i;
   }
 
-  return 0;
+  return weeks.length - 1;
 }
 
 function eventsByDate(events) {
@@ -336,6 +338,7 @@ function renderList() {
   }
 
   const isMobile = window.matchMedia('(max-width: 900px)').matches;
+  const currentWeekAutoIndex = getCurrentWeekIndex(weeks);
   if (currentWeekIndex >= weeks.length) {
     currentWeekIndex = Math.max(weeks.length - 1, 0);
   }
@@ -343,9 +346,13 @@ function renderList() {
   scheduleList.classList.remove('main-scroll', 'filtered-scroll', 'mobile-scroll');
 
   if (isMobile) {
+    if (currentWeekIndex === 0 && selectedTeams.length === 0) {
+      currentWeekIndex = currentWeekAutoIndex;
+    }
     const week = weeks[currentWeekIndex];
     scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, currentWeekIndex + 1, true, true));
   } else {
+    currentWeekIndex = currentWeekAutoIndex;
     scheduleList.classList.add('main-scroll');
     scheduleList.append(renderWeekdayHeader());
 
