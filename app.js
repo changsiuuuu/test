@@ -14,6 +14,8 @@ let allSchedules = MANUAL_SCHEDULE;
 let selectedTeams = [];
 let currentWeekIndex = 0;
 let lastSwipeDirection = 0;
+let touchStartX = 0;
+let touchStartY = 0;
 
 function getStartOfWeekMonday(date = new Date()) {
   const local = new Date(date);
@@ -117,7 +119,7 @@ function getTodayMatchIds(events) {
   const ids = new Set();
 
   for (const event of events) {
-    const eventKey = event.startTime.slice(0, 10);
+    const eventKey = toLocalDateKey(new Date(event.startTime));
     if (eventKey === todayKey && event.id) ids.add(event.id);
   }
 
@@ -148,26 +150,24 @@ function groupEventsByWeek(events) {
 
 
 function getCurrentWeekIndex(weeks) {
-  const nowTs = Date.now();
+  const now = new Date();
+  const currentWeekStart = getStartOfWeekMonday(now);
+  const currentKey = toLocalDateKey(currentWeekStart);
+
+  const exactIndex = weeks.findIndex((week) => toLocalDateKey(week.weekStart) === currentKey);
+  if (exactIndex >= 0) return exactIndex;
 
   for (let i = 0; i < weeks.length; i += 1) {
-    const events = weeks[i].events;
-    if (!events.length) continue;
-
-    const startTs = new Date(events[0].startTime).getTime();
-    const endTs = new Date(events[events.length - 1].startTime).getTime() + 24 * 60 * 60 * 1000;
-
-    if (nowTs >= startTs && nowTs < endTs) return i;
-    if (nowTs < startTs) return i;
+    if (weeks[i].weekStart > currentWeekStart) return i;
   }
 
-  return Math.max(weeks.length - 1, 0);
+  return 0;
 }
 
 function eventsByDate(events) {
   const map = new Map();
   for (const event of events) {
-    const key = event.startTime.slice(0, 10);
+    const key = toLocalDateKey(new Date(event.startTime));
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(event);
   }
@@ -195,7 +195,11 @@ function renderTeamButtons() {
         selectedTeams = [selectedTeams[1], team];
       }
 
-      currentWeekIndex = 0;
+      if (selectedTeams.length === 0) {
+        currentWeekIndex = getCurrentWeekIndex(groupEventsByWeek(allSchedules));
+      } else {
+        currentWeekIndex = 0;
+      }
       renderTeamButtons();
       renderList();
     });
@@ -332,22 +336,31 @@ function renderList() {
   }
 
   const isMobile = window.matchMedia('(max-width: 900px)').matches;
-  const currentWeekAutoIndex = getCurrentWeekIndex(weeks);
-  const orderedWeeks = [
-    ...weeks.slice(currentWeekAutoIndex),
-    ...weeks.slice(0, currentWeekAutoIndex),
-  ];
+  if (currentWeekIndex >= weeks.length) {
+    currentWeekIndex = Math.max(weeks.length - 1, 0);
+  }
 
   scheduleList.classList.remove('main-scroll', 'filtered-scroll', 'mobile-scroll');
 
-  if (!isMobile) {
+  if (isMobile) {
+    const week = weeks[currentWeekIndex];
+    scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, currentWeekIndex + 1, true, true));
+  } else {
+    scheduleList.classList.add('main-scroll');
     scheduleList.append(renderWeekdayHeader());
-  }
 
-  orderedWeeks.forEach((week, index) => {
-    const weekNumber = ((currentWeekAutoIndex + index) % weeks.length) + 1;
-    scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, weekNumber, isMobile, false));
-  });
+    weeks.forEach((week, index) => {
+      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, index + 1, false, false));
+    });
+
+    requestAnimationFrame(() => {
+      const currentWeekEl = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekIndex + 1}"]`);
+      if (!currentWeekEl) return;
+      const weekdayHeader = scheduleList.querySelector('.weekday-header-row');
+      const stickyOffset = weekdayHeader ? weekdayHeader.offsetHeight : 0;
+      scheduleList.scrollTop = Math.max(currentWeekEl.offsetTop - stickyOffset - 8, 0);
+    });
+  }
 
   loadMoreBtn.hidden = true;
   lastSwipeDirection = 0;
@@ -370,6 +383,37 @@ resetFilterBtn.addEventListener('click', () => {
   currentWeekIndex = getCurrentWeekIndex(groupEventsByWeek(allSchedules));
   renderTeamButtons();
   renderList();
+});
+
+scheduleList.addEventListener('touchstart', (event) => {
+  const isMobile = window.matchMedia('(max-width: 900px)').matches;
+  if (!isMobile || selectedTeams.length > 0) return;
+  const touch = event.changedTouches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+});
+
+scheduleList.addEventListener('touchend', (event) => {
+  const isMobile = window.matchMedia('(max-width: 900px)').matches;
+  if (!isMobile || selectedTeams.length > 0) return;
+
+  const touch = event.changedTouches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+  if (Math.abs(deltaX) < 40 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+  const weeks = groupEventsByWeek(allSchedules);
+  if (!weeks.length) return;
+
+  if (deltaX < 0 && currentWeekIndex < weeks.length - 1) {
+    currentWeekIndex += 1;
+    lastSwipeDirection = -1;
+    renderList();
+  } else if (deltaX > 0 && currentWeekIndex > 0) {
+    currentWeekIndex -= 1;
+    lastSwipeDirection = 1;
+    renderList();
+  }
 });
 
 loadMoreBtn.hidden = true;

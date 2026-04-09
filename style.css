@@ -110,7 +110,7 @@ h2 {
 .weekday-header-cell {
   text-align: center;
   font-weight: 800;
-  color: #cdd4e6;
+  color: #3f495f;
   border-bottom: 1px solid #d1dcf0;
   padding-bottom: 6px;
 }
@@ -217,14 +217,19 @@ h2 {
 }
 
 .featured-sat {
-  color: #ffd166;
+  color: #5c2d00;
+  background: #ffe3bf;
+  border: 1px solid #f2b56b;
+  border-radius: 6px;
+  padding: 2px 6px;
+  display: inline-block;
   font-weight: 800;
 }
 
 .featured-sat-text {
-  border-color: #e9b949;
-  background: #fff4d6;
-  color: #7a5600;
+  border-color: #d9822b;
+  background: #fff1e1;
+  color: #7a3e00;
 }
 
 .today-match {
