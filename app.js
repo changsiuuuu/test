@@ -13,8 +13,6 @@ const resetFilterBtn = document.getElementById('resetFilterBtn');
 let allSchedules = MANUAL_SCHEDULE;
 let selectedTeams = [];
 let currentWeekIndex = 0;
-let touchStartX = null;
-let touchStartY = null;
 let lastSwipeDirection = 0;
 
 function getStartOfWeekMonday(date = new Date()) {
@@ -337,27 +335,24 @@ function renderList() {
     currentWeekIndex = currentWeekAutoIndex;
   }
 
-  if (isMobile) {
-    scheduleList.classList.remove('main-scroll', 'filtered-scroll', 'mobile-scroll');
-    if (currentWeekIndex < 0) currentWeekIndex = 0;
-    if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
-    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, todayMatchIds, currentWeekIndex + 1, true, true));
-  } else {
-    scheduleList.classList.add('main-scroll');
-    scheduleList.classList.remove('filtered-scroll', 'mobile-scroll');
-    scheduleList.append(renderWeekdayHeader());
-    weeks.forEach((week, index) => {
-      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, index + 1, false));
-    });
+  scheduleList.classList.add('main-scroll');
+  scheduleList.classList.remove('filtered-scroll', 'mobile-scroll');
 
-    const currentWeekRow = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekAutoIndex + 1}"]`);
-    const headerRow = scheduleList.querySelector('.weekday-header-row');
-    if (currentWeekRow) {
-      requestAnimationFrame(() => {
-        const headerOffset = headerRow ? headerRow.offsetHeight + 12 : 52;
-        scheduleList.scrollTop = Math.max(currentWeekRow.offsetTop - headerOffset, 0);
-      });
-    }
+  if (!isMobile) {
+    scheduleList.append(renderWeekdayHeader());
+  }
+
+  weeks.forEach((week, index) => {
+    scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, index + 1, isMobile, false));
+  });
+
+  const currentWeekRow = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekAutoIndex + 1}"]`);
+  const headerRow = scheduleList.querySelector('.weekday-header-row');
+  if (currentWeekRow) {
+    requestAnimationFrame(() => {
+      const headerOffset = headerRow ? headerRow.offsetHeight + 12 : 12;
+      scheduleList.scrollTop = Math.max(currentWeekRow.offsetTop - headerOffset, 0);
+    });
   }
 
   loadMoreBtn.hidden = true;
@@ -375,33 +370,6 @@ function init() {
   renderList();
 }
 
-function navigateWeek(delta) {
-  if (selectedTeams.length > 0) return;
-  if (!window.matchMedia('(max-width: 900px)').matches) return;
-  lastSwipeDirection = delta;
-  currentWeekIndex += delta;
-  renderList();
-}
-
-scheduleList.addEventListener('touchstart', (event) => {
-  touchStartX = event.touches[0]?.clientX ?? null;
-  touchStartY = event.touches[0]?.clientY ?? null;
-}, { passive: true });
-
-scheduleList.addEventListener('touchend', (event) => {
-  if (touchStartX === null || selectedTeams.length > 0) return;
-  const endX = event.changedTouches[0]?.clientX ?? touchStartX;
-  const endY = event.changedTouches[0]?.clientY ?? touchStartY;
-  const diffX = endX - touchStartX;
-  const diffY = endY - touchStartY;
-  touchStartX = null;
-  touchStartY = null;
-
-  if (Math.abs(diffY) > Math.abs(diffX)) return;
-  if (Math.abs(diffX) < 35) return;
-  if (diffX < 0) navigateWeek(1); // 좌로 스와이프 -> 다음 주
-  else navigateWeek(-1); // 우로 스와이프 -> 이전 주
-}, { passive: true });
 
 resetFilterBtn.addEventListener('click', () => {
   selectedTeams = [];
