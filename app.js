@@ -360,13 +360,15 @@ function renderList() {
       scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, index + 1, false, false));
     });
 
-    requestAnimationFrame(() => {
+    const moveToCurrentWeek = () => {
       const currentWeekEl = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekIndex + 1}"]`);
       if (!currentWeekEl) return;
       const weekdayHeader = scheduleList.querySelector('.weekday-header-row');
       const stickyOffset = weekdayHeader ? weekdayHeader.offsetHeight : 0;
       scheduleList.scrollTop = Math.max(currentWeekEl.offsetTop - stickyOffset - 8, 0);
-    });
+    };
+
+    requestAnimationFrame(() => requestAnimationFrame(moveToCurrentWeek));
   }
 
   loadMoreBtn.hidden = true;
