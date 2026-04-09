@@ -309,6 +309,7 @@ function renderList() {
   const todayMatchIds = getTodayMatchIds(allSchedules);
 
   scheduleList.innerHTML = '';
+  scheduleList.scrollTop = 0;
 
   if (selectedTeams.length === 2) {
     listTitle.textContent = `${selectedTeams[0]} vs ${selectedTeams[1]} 일정`;
@@ -327,6 +328,7 @@ function renderList() {
       scheduleList.classList.add('filtered-scroll');
     }
     renderFilteredTextList(upcomingFilteredEvents, saturdayFirstMatchIds, todayMatchIds);
+    scheduleList.scrollTop = 0;
     return;
   }
 
@@ -368,7 +370,7 @@ function renderList() {
       scheduleList.scrollTop = Math.max(currentWeekEl.offsetTop - stickyOffset - 8, 0);
     };
 
-    requestAnimationFrame(() => requestAnimationFrame(moveToCurrentWeek));
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(moveToCurrentWeek, 0)));
   }
 
   loadMoreBtn.hidden = true;
