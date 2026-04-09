@@ -310,7 +310,6 @@ function renderList() {
   const todayMatchIds = getTodayMatchIds(allSchedules);
 
   scheduleList.innerHTML = '';
-  scheduleList.scrollTop = 0;
 
   if (selectedTeams.length === 2) {
     listTitle.textContent = `${selectedTeams[0]} vs ${selectedTeams[1]} 일정`;
@@ -414,14 +413,18 @@ scheduleList.addEventListener('touchend', (event) => {
   const weeks = groupEventsByWeek(allSchedules);
   if (!weeks.length) return;
 
+  const previousScrollY = window.scrollY;
+
   if (deltaX < 0 && currentWeekIndex < weeks.length - 1) {
     currentWeekIndex += 1;
     lastSwipeDirection = -1;
     renderList();
+    requestAnimationFrame(() => window.scrollTo(0, previousScrollY));
   } else if (deltaX > 0 && currentWeekIndex > 0) {
     currentWeekIndex -= 1;
     lastSwipeDirection = 1;
     renderList();
+    requestAnimationFrame(() => window.scrollTo(0, previousScrollY));
   }
 });
 
