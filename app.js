@@ -315,8 +315,11 @@ function renderList() {
   if (selectedTeams.length > 0) {
     const upcomingFilteredEvents = getUpcomingEvents(filteredEvents);
     loadMoreBtn.hidden = true;
-    scheduleList.classList.add('filtered-scroll');
-    scheduleList.classList.remove('mobile-scroll', 'main-scroll');
+    const isMobileFilter = window.matchMedia('(max-width: 900px)').matches;
+    scheduleList.classList.remove('main-scroll', 'mobile-scroll', 'filtered-scroll');
+    if (!isMobileFilter) {
+      scheduleList.classList.add('filtered-scroll');
+    }
     renderFilteredTextList(upcomingFilteredEvents, saturdayFirstMatchIds, todayMatchIds);
     return;
   }
@@ -330,30 +333,21 @@ function renderList() {
 
   const isMobile = window.matchMedia('(max-width: 900px)').matches;
   const currentWeekAutoIndex = getCurrentWeekIndex(weeks);
+  const orderedWeeks = [
+    ...weeks.slice(currentWeekAutoIndex),
+    ...weeks.slice(0, currentWeekAutoIndex),
+  ];
 
-  if (currentWeekIndex < 0 || currentWeekIndex > weeks.length - 1) {
-    currentWeekIndex = currentWeekAutoIndex;
-  }
-
-  scheduleList.classList.add('main-scroll');
-  scheduleList.classList.remove('filtered-scroll', 'mobile-scroll');
+  scheduleList.classList.remove('main-scroll', 'filtered-scroll', 'mobile-scroll');
 
   if (!isMobile) {
     scheduleList.append(renderWeekdayHeader());
   }
 
-  weeks.forEach((week, index) => {
-    scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, index + 1, isMobile, false));
+  orderedWeeks.forEach((week, index) => {
+    const weekNumber = ((currentWeekAutoIndex + index) % weeks.length) + 1;
+    scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, weekNumber, isMobile, false));
   });
-
-  const currentWeekRow = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekAutoIndex + 1}"]`);
-  const headerRow = scheduleList.querySelector('.weekday-header-row');
-  if (currentWeekRow) {
-    requestAnimationFrame(() => {
-      const headerOffset = headerRow ? headerRow.offsetHeight + 12 : 12;
-      scheduleList.scrollTop = Math.max(currentWeekRow.offsetTop - headerOffset, 0);
-    });
-  }
 
   loadMoreBtn.hidden = true;
   lastSwipeDirection = 0;

@@ -1,12 +1,12 @@
 :root {
   color-scheme: dark;
-  --bg: #0f1115;
-  --panel: #171a21;
-  --panel-soft: #1d212b;
-  --text: #f2f4f8;
-  --muted: #a7b0c0;
+  --bg: #eef3fb;
+  --panel: #ffffff;
+  --panel-soft: #f5f8ff;
+  --text: #1f2a44;
+  --muted: #5f6b85;
   --accent: #4da3ff;
-  --accent-weak: #1f3b5c;
+  --accent-weak: #d9eaff;
   --danger: #ff6b6b;
 }
 
@@ -17,7 +17,7 @@
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: radial-gradient(circle at top, #1a2030, var(--bg));
+  background: linear-gradient(180deg, #f8fbff, var(--bg));
   color: var(--text);
   overflow-y: auto;
 }
@@ -41,7 +41,7 @@ body {
 
 section {
   background: var(--panel);
-  border: 1px solid #242a37;
+  border: 1px solid #dbe4f2;
   border-radius: 14px;
   padding: 16px;
   margin-top: 16px;
@@ -61,7 +61,7 @@ h2 {
 .team-button {
   background: var(--panel-soft);
   color: var(--text);
-  border: 1px solid #2b3242;
+  border: 1px solid #c9d6ea;
   border-radius: 10px;
   padding: 10px;
   font-weight: 700;
@@ -111,13 +111,13 @@ h2 {
   text-align: center;
   font-weight: 800;
   color: #cdd4e6;
-  border-bottom: 1px solid #334056;
+  border-bottom: 1px solid #d1dcf0;
   padding-bottom: 6px;
 }
 
 .week-row {
-  border: 1px solid #2a3040;
-  background: #1a1f2b;
+  border: 1px solid #d3dded;
+  background: #ffffff;
   border-radius: 10px;
   padding: 10px;
 }
@@ -135,7 +135,7 @@ h2 {
 }
 
 .day-cell {
-  border: 1px solid #2d3446;
+  border: 1px solid #d6e1f2;
   background: var(--panel-soft);
   border-radius: 8px;
   padding: 8px;
@@ -145,7 +145,7 @@ h2 {
 .day-header {
   font-size: 0.76rem;
   font-weight: 800;
-  color: #d6dbeb;
+  color: #44506a;
   margin-bottom: 8px;
 }
 
@@ -157,7 +157,7 @@ h2 {
 }
 
 .day-empty {
-  color: #6e7890;
+  color: #8a95ab;
   font-size: 0.82rem;
 }
 
@@ -208,7 +208,7 @@ h2 {
 }
 
 .text-schedule-item {
-  border: 1px solid #2a3040;
+  border: 1px solid #d3dded;
   background: var(--panel-soft);
   border-radius: 8px;
   padding: 10px;
@@ -223,20 +223,20 @@ h2 {
 
 .featured-sat-text {
   border-color: #e9b949;
-  background: #3a2e13;
-  color: #ffe4a2;
+  background: #fff4d6;
+  color: #7a5600;
 }
 
 .today-match {
-  outline: 2px solid #4da3ff;
-  outline-offset: 1px;
-  background: #13263f;
+  border: 2px solid #4da3ff !important;
+  box-shadow: 0 0 0 2px rgba(77, 163, 255, 0.15) inset;
+  background: #eef6ff !important;
 }
 
 .today-cell {
   border: 2px solid #4da3ff;
   box-shadow: 0 0 0 2px rgba(77, 163, 255, 0.2);
-  background: linear-gradient(180deg, #17314f, #1d212b);
+  background: linear-gradient(180deg, #eef6ff, #f7fbff);
 }
 
 .actions {
@@ -280,5 +280,13 @@ button {
 @media (max-width: 900px) {
   .week-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .schedule-list.filtered-scroll {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
   }
 }
