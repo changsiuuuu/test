@@ -112,6 +112,19 @@ function getSaturdayFirstMatchIds(events) {
   return ids;
 }
 
+
+function getTodayMatchIds(events) {
+  const todayKey = toLocalDateKey(new Date());
+  const ids = new Set();
+
+  for (const event of events) {
+    const eventKey = event.startTime.slice(0, 10);
+    if (eventKey === todayKey && event.id) ids.add(event.id);
+  }
+
+  return ids;
+}
+
 function groupEventsByWeek(events) {
   const weekMap = new Map();
 
@@ -200,7 +213,7 @@ function renderWeekdayHeader() {
   return wrap;
 }
 
-function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, isMobile, mobileSwipe = false) {
+function renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, weekNumber, isMobile, mobileSwipe = false) {
   const wrap = document.createElement('li');
   wrap.className = 'week-row';
   wrap.dataset.weekIndex = String(weekNumber);
@@ -243,7 +256,7 @@ function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, isMobile, mobile
     } else {
       for (const match of matches) {
         const item = document.createElement('div');
-        item.className = `day-match ${saturdayFirstMatchIds.has(match.id) ? 'featured-sat' : ''}`;
+        item.className = `day-match ${saturdayFirstMatchIds.has(match.id) ? 'featured-sat' : ''} ${todayMatchIds.has(match.id) ? 'today-match' : ''}`;
         item.textContent = `${match.teamA} vs ${match.teamB}`;
         cell.append(item);
       }
@@ -256,7 +269,7 @@ function renderWeekRow(week, saturdayFirstMatchIds, weekNumber, isMobile, mobile
   return wrap;
 }
 
-function renderFilteredTextList(events, saturdayFirstMatchIds) {
+function renderFilteredTextList(events, saturdayFirstMatchIds, todayMatchIds) {
   const sorted = [...events].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
   if (!sorted.length) {
@@ -266,7 +279,7 @@ function renderFilteredTextList(events, saturdayFirstMatchIds) {
 
   for (const event of sorted) {
     const li = document.createElement('li');
-    li.className = `text-schedule-item ${saturdayFirstMatchIds.has(event.id) ? 'featured-sat-text' : ''}`;
+    li.className = `text-schedule-item ${saturdayFirstMatchIds.has(event.id) ? 'featured-sat-text' : ''} ${todayMatchIds.has(event.id) ? 'today-match' : ''}`;
     li.textContent = `${formatDateTime(event.startTime)} · ${event.teamA} vs ${event.teamB}`;
     scheduleList.append(li);
   }
@@ -276,6 +289,7 @@ function renderList() {
   const weeks = groupEventsByWeek(allSchedules);
   const filteredEvents = applyTeamFilter(allSchedules);
   const saturdayFirstMatchIds = getSaturdayFirstMatchIds(allSchedules);
+  const todayMatchIds = getTodayMatchIds(allSchedules);
 
   scheduleList.innerHTML = '';
 
@@ -292,7 +306,7 @@ function renderList() {
     loadMoreBtn.hidden = true;
     scheduleList.classList.add('filtered-scroll');
     scheduleList.classList.remove('mobile-scroll', 'main-scroll');
-    renderFilteredTextList(upcomingFilteredEvents, saturdayFirstMatchIds);
+    renderFilteredTextList(upcomingFilteredEvents, saturdayFirstMatchIds, todayMatchIds);
     return;
   }
 
@@ -311,22 +325,25 @@ function renderList() {
   }
 
   if (isMobile) {
-    scheduleList.classList.remove('main-scroll', 'filtered-scroll');
-    scheduleList.classList.add('mobile-scroll');
+    scheduleList.classList.remove('main-scroll', 'filtered-scroll', 'mobile-scroll');
     if (currentWeekIndex < 0) currentWeekIndex = 0;
     if (currentWeekIndex > weeks.length - 1) currentWeekIndex = weeks.length - 1;
-    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, currentWeekIndex + 1, true, true));
+    scheduleList.append(renderWeekRow(weeks[currentWeekIndex], saturdayFirstMatchIds, todayMatchIds, currentWeekIndex + 1, true, true));
   } else {
     scheduleList.classList.add('main-scroll');
     scheduleList.classList.remove('filtered-scroll', 'mobile-scroll');
     scheduleList.append(renderWeekdayHeader());
     weeks.forEach((week, index) => {
-      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, index + 1, false));
+      scheduleList.append(renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, index + 1, false));
     });
 
     const currentWeekRow = scheduleList.querySelector(`.week-row[data-week-index="${currentWeekAutoIndex + 1}"]`);
+    const headerRow = scheduleList.querySelector('.weekday-header-row');
     if (currentWeekRow) {
-      scheduleList.scrollTop = Math.max(currentWeekRow.offsetTop - 52, 0);
+      requestAnimationFrame(() => {
+        const headerOffset = headerRow ? headerRow.offsetHeight + 12 : 52;
+        scheduleList.scrollTop = Math.max(currentWeekRow.offsetTop - headerOffset, 0);
+      });
     }
   }
 

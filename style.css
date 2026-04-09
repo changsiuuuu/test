@@ -200,12 +200,6 @@ h2 {
 }
 
 
-.schedule-list.mobile-scroll {
-  max-height: 68vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 .schedule-list.filtered-scroll {
   max-height: 420px;
   overflow-y: auto;
@@ -230,6 +224,12 @@ h2 {
   border-color: #e9b949;
   background: #3a2e13;
   color: #ffe4a2;
+}
+
+.today-match {
+  outline: 2px solid #4da3ff;
+  outline-offset: 1px;
+  background: #13263f;
 }
 
 .actions {
