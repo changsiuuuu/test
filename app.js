@@ -14,6 +14,7 @@ let allSchedules = MANUAL_SCHEDULE;
 let selectedTeams = [];
 let currentWeekIndex = 0;
 let touchStartX = null;
+let touchStartY = null;
 let lastSwipeDirection = 0;
 
 function getStartOfWeekMonday(date = new Date()) {
@@ -149,13 +150,20 @@ function groupEventsByWeek(events) {
 
 
 function getCurrentWeekIndex(weeks) {
-  const currentWeekKey = toLocalDateKey(getStartOfWeekMonday());
-  const found = weeks.findIndex((week) => toLocalDateKey(week.weekStart) === currentWeekKey);
-  if (found >= 0) return found;
+  const nowTs = Date.now();
 
-  const now = new Date();
-  const next = weeks.findIndex((week) => week.weekStart >= now);
-  return next >= 0 ? next : Math.max(weeks.length - 1, 0);
+  for (let i = 0; i < weeks.length; i += 1) {
+    const events = weeks[i].events;
+    if (!events.length) continue;
+
+    const startTs = new Date(events[0].startTime).getTime();
+    const endTs = new Date(events[events.length - 1].startTime).getTime() + 24 * 60 * 60 * 1000;
+
+    if (nowTs >= startTs && nowTs < endTs) return i;
+    if (nowTs < startTs) return i;
+  }
+
+  return Math.max(weeks.length - 1, 0);
 }
 
 function eventsByDate(events) {
@@ -248,6 +256,11 @@ function renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, weekNumber, i
     cell.append(dayHeader);
 
     const matches = byDate.get(isoDate) ?? [];
+    const hasTodayMatch = matches.some((match) => todayMatchIds.has(match.id));
+    if (hasTodayMatch) {
+      cell.classList.add('today-cell');
+    }
+
     if (!matches.length) {
       const empty = document.createElement('div');
       empty.className = 'day-empty';
@@ -256,7 +269,7 @@ function renderWeekRow(week, saturdayFirstMatchIds, todayMatchIds, weekNumber, i
     } else {
       for (const match of matches) {
         const item = document.createElement('div');
-        item.className = `day-match ${saturdayFirstMatchIds.has(match.id) ? 'featured-sat' : ''} ${todayMatchIds.has(match.id) ? 'today-match' : ''}`;
+        item.className = `day-match ${saturdayFirstMatchIds.has(match.id) ? 'featured-sat' : ''}`;
         item.textContent = `${match.teamA} vs ${match.teamB}`;
         cell.append(item);
       }
@@ -372,14 +385,19 @@ function navigateWeek(delta) {
 
 scheduleList.addEventListener('touchstart', (event) => {
   touchStartX = event.touches[0]?.clientX ?? null;
+  touchStartY = event.touches[0]?.clientY ?? null;
 }, { passive: true });
 
 scheduleList.addEventListener('touchend', (event) => {
   if (touchStartX === null || selectedTeams.length > 0) return;
   const endX = event.changedTouches[0]?.clientX ?? touchStartX;
+  const endY = event.changedTouches[0]?.clientY ?? touchStartY;
   const diffX = endX - touchStartX;
+  const diffY = endY - touchStartY;
   touchStartX = null;
+  touchStartY = null;
 
+  if (Math.abs(diffY) > Math.abs(diffX)) return;
   if (Math.abs(diffX) < 35) return;
   if (diffX < 0) navigateWeek(1); // 좌로 스와이프 -> 다음 주
   else navigateWeek(-1); // 우로 스와이프 -> 이전 주

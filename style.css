@@ -19,6 +19,7 @@ body {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: radial-gradient(circle at top, #1a2030, var(--bg));
   color: var(--text);
+  overflow-y: auto;
 }
 
 .container {
@@ -230,6 +231,12 @@ h2 {
   outline: 2px solid #4da3ff;
   outline-offset: 1px;
   background: #13263f;
+}
+
+.today-cell {
+  border: 2px solid #4da3ff;
+  box-shadow: 0 0 0 2px rgba(77, 163, 255, 0.2);
+  background: linear-gradient(180deg, #17314f, #1d212b);
 }
 
 .actions {
